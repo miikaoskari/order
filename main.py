@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import argparse
 
@@ -22,13 +23,17 @@ class Order:
     def match(self):
         if self.string:
             splits = self.string.split()
-            for root, dirs, files in os.walk(self.dir):
+            for _, _, files in os.walk(self.dir):
                 for file in files:
                     for word in splits:
                         if word in file:
                             self.matched.append(file)
         elif self.regex:
             pattern = re.compile(self.regex)
+            for _, _, files in os.walk(self.dir):
+                for file in files:
+                    if pattern.search(file):
+                        self.matched.append(file)
 
     def order(self):
         destination = self.string
