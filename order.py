@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import argparse
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(prog="order", description="order files based on names")
 
@@ -34,18 +35,20 @@ class Order:
             None
         """
         if self.string:
-            splits = self.string.split()
-            for _, _, files in os.walk(self.dir):
+            splits = self.string.lower().split()
+            for root, _, files in os.walk(self.dir):
                 for file in files:
                     for word in splits:
-                        if word in file:
-                            self.matched.append(file)
+                        if word in file.lower():
+                            full_path = os.path.join(root, file)
+                            self.matched.append(full_path)
         elif self.regex:
             pattern = re.compile(self.regex)
-            for _, _, files in os.walk(self.dir):
+            for root, _, files in os.walk(self.dir):
                 for file in files:
                     if pattern.search(file):
-                        self.matched.append(file)
+                        full_path = os.path.join(root, file)
+                        self.matched.append(full_path)
 
     def order(self):
         """
@@ -61,17 +64,25 @@ class Order:
             OSError: If there is an error moving the files.
 
         """
-        destination = self.string
+
+        cwd = os.getcwd()
+        destination = os.path.join(cwd, self.string)
         source = self.dir
-        os.makedirs(os.path.dirname(destination), exist_ok=True)
+
+        try:
+            os.makedirs(destination, exist_ok=True)
+        except OSError as e:
+            print(f"error creating destination directory: {e}")
+            return
         
-        for file in self.matched:
-            source_path = os.path.join(source, file)
-            destination_path = os.path.join(destination, file)
+        for file in tqdm(self.matched, desc="moving files"):
             try:
-                shutil.move(source_path, destination_path)
+                shutil.move(file, destination)
+            except FileExistsError as e:
+                continue
             except OSError as e:
-                print(f"error moving {source_path} to {destination_path}: {e}")
+                print(f"error moving {file} to {destination}: {e}")
+
 
 if __name__ == "__main__":
     if(args.verbose):
