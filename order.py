@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import re
 import shutil
@@ -21,6 +22,17 @@ class Order:
         pass
 
     def match(self):
+        """
+        Matches files in the specified directory based on the given string or regular expression.
+
+        If a string is provided, it splits the string into words and searches for files that contain any of the words in their names.
+        If a regular expression is provided, it searches for files that match the regular expression pattern.
+
+        The matched files are stored in the `matched` list.
+
+        Returns:
+            None
+        """
         if self.string:
             splits = self.string.split()
             for _, _, files in os.walk(self.dir):
@@ -36,6 +48,19 @@ class Order:
                         self.matched.append(file)
 
     def order(self):
+        """
+        Move files from the source directory to the destination directory.
+
+        Args:
+            self: The current instance of the class.
+
+        Returns:
+            None
+
+        Raises:
+            OSError: If there is an error moving the files.
+
+        """
         destination = self.string
         source = self.dir
         os.makedirs(os.path.dirname(destination), exist_ok=True)
